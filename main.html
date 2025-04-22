@@ -1,36 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Tic-Tac-Toe</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            background-color: lightgray;
+            cursor: pointer;
+        }
+        .cell.taken {
+            pointer-events: none;
+        }
+        .message {
+            margin-top: 20px;
+        }
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        .input-container input {
+            margin: 5px;
+            padding: 8px;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Form view -->
-        <div id="player-form">
-            <input type="text" id="player-1" placeholder="Enter Player 1 Name" required>
-            <input type="text" id="player-2" placeholder="Enter Player 2 Name" required>
+        <div class="input-container">
+            <h1>Tic Tac Toe</h1>
+            <label for="player-1">Player 1 Name:</label>
+            <input type="text" id="player-1" placeholder="Enter Player 1 Name" />
+            <label for="player-2">Player 2 Name:</label>
+            <input type="text" id="player-2" placeholder="Enter Player 2 Name" />
             <button id="submit">Start Game</button>
         </div>
-
-        <!-- Game view -->
-        <div id="game-area" style="display: none;">
-            <h1>Tic Tac Toe</h1>
-            <div class="message"></div>
-            <div class="board" id="board">
-                <!-- Cells with id 1–9 -->
-                <div class="cell" id="1"></div>
-                <div class="cell" id="2"></div>
-                <div class="cell" id="3"></div>
-                <div class="cell" id="4"></div>
-                <div class="cell" id="5"></div>
-                <div class="cell" id="6"></div>
-                <div class="cell" id="7"></div>
-                <div class="cell" id="8"></div>
-                <div class="cell" id="9"></div>
-            </div>
-            <button id="reset" style="display: none;">Reset Game</button>
+        <div class="board" id="board" style="display: none;">
+            <!-- Cells will be dynamically created here -->
         </div>
+        <div class="message" id="message"></div>
     </div>
-    <script type="text/javascript" src="./script.js"></script>
+
+    <script>
+        const submitButton = document.getElementById('submit');
+        const boardDiv = document.getElementById('board');
+        const messageDiv = document.getElementById('message');
+        const player1Input = document.getElementById('player-1');
+        const player2Input = document.getElementById('player-2');
+
+        let currentPlayer = 'X';
+        let player1Name = '';
+        let player2Name = '';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = false;
+
+        // Function to create the game board
+        function createBoard() {
+            boardDiv.innerHTML = ''; // Clear any previous board
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.id = i + 1; // Add id 1, 2, 3, ..., 9
+                cell.addEventListener('click', handleCellClick);
+                boardDiv.appendChild(cell);
+            }
+        }
+
+        // Handle the cell click
+        function handleCellClick(event) {
+            const cell = event.target;
+            const index = cell.id - 1; // Get the index (0-8)
+
+            if (gameBoard[index] !== '' || !gameActive) return;
+
+            gameBoard[index] = currentPlayer;
+            cell.textContent = currentPlayer === 'X' ? 'X' : 'O';
+            cell.classList.add('taken');
+
+            if (checkWinner()) {
+                messageDiv.textContent = `${currentPlayer === 'X' ? player1Name : player2Name}, congratulations you won!`;
+                gameActive = false;
+            } else if (gameBoard.every(cell => cell !== '')) {
+                messageDiv.textContent = 'It\'s a draw!';
+                gameActive = false;
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                messageDiv.textContent = `${currentPlayer === 'X' ? player1Name : player2Name}, you're up!`;
+            }
+        }
+
+        // Check if there's a winner
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6],
+            ];
+
+            return winPatterns.some(pattern => {
+                const [a, b, c] = pattern;
+                return gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c];
+            });
+        }
+
+        // Start the game after entering player names
+        submitButton.addEventListener('click', () => {
+            player1Name = player1Input.value.trim();
+            player2Name = player2Input.value.trim();
+
+            if (!player1Name || !player2Name) {
+                alert("Please enter names for both players.");
+                return;
+            }
+
+            messageDiv.textContent = `${player1Name}, you're up!`;
+            player1Input.disabled = true;
+            player2Input.disabled = true;
+            submitButton.disabled = true;
+
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            gameActive = true;
+            createBoard();
+            boardDiv.style.display = 'grid'; // Show the board
+        });
+    </script>
 </body>
 </html>
